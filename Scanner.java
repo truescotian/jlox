@@ -86,11 +86,41 @@ class Scanner {
 			case '\n':
 				  line++;
 				  break;
+			
+			case '"': string(); break;
+
 
 			default:
 				Lox.error(line, "Unexpected character.");
 				break;
 		}
+	}
+
+	// string will consume characters until we het the " that ends the 
+	// string. Handles running out of input before the string is closed
+	// and report an error for it.
+	// This supports multi-line strings.
+	private void string() {
+		// consume until end of quote is found, or end of source.
+		while (peek() != '"' && !isAtEnd()) {
+			if (peek() == '\n') line++;
+			advance();
+		}
+		// if you're here, you either reached an ", or you've reached
+		// the end of source.
+		
+		if (isAtEnd()) { // end of source without finding "
+			Lox.error(line, "Unterminated string.");
+			return;
+		}
+
+		// The closing ".
+		advance();
+
+		// Trim the surrounding quotes. This value will be used later
+		// by the interpreter.
+		String value = source.substring(start + 1, current - 1);
+		addToken(STRING, value);
 	}
 
 	// match is basically conditional advance(). Only consume the current
