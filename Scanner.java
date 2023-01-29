@@ -42,6 +42,14 @@ class Scanner {
 			case '+': addToken(PLUS); break;
 			case ';': addToken(SEMICOLON); break;
 			case '*': addToken(STAR); break;
+
+			// when the very next chracter is something like
+			// an equals sign, so "!=", then create a != lexeme.
+			// Using match() we recognize these lexemes in two
+			// stages. When we receive "!", jump to its switch case
+			// so we know the lexeme starts with "!", then look
+			// at the next character to determine if we're on 
+			// a "!=" or merely a "!".
 			case '!':
 				  addToken(match('=') ? BANG_EQUAL : BANG);
 				  break;
@@ -54,6 +62,30 @@ class Scanner {
 			case '>':
 				  addToken(match('=') ? GREATER_EQUAL : GREATER);
 				  break;
+			case '/':
+				  // For division, that character needs special
+				  // handling because comments begin with a slash too.
+				  // Since match() does a lookahead, this is checking 
+				  // "//"
+				  if (match('/')) {
+					// A comment goes until the end of a line.
+					// Notice that we don't call addToken(). This is
+					// because comments are useless lexemes, and the
+					// parser shouldn't deal with them.
+					while (peek() != '\n' && !isAtEnd()) advance();
+				  } else {
+					addToken(SLASH);
+				  }
+				  break;
+			case ' ':
+			case '\r':
+			case '\t':
+				  // Ignore whitespace.
+				  break;
+
+			case '\n':
+				  line++;
+				  break;
 
 			default:
 				Lox.error(line, "Unexpected character.");
@@ -61,12 +93,22 @@ class Scanner {
 		}
 	}
 
+	// match is basically conditional advance(). Only consume the current
+	// character if it's what we're looking for.
 	private boolean match(char expected) {
 		if (isAtEnd()) return false;
 		if (source.charAt(current) != expected) return false;
 
 		current++;
 		return true;
+	}
+
+	// peek looks at the next character. If is at end, then '\0' is returned.
+	// Similar to advnace(), but doesn't consume a character. This is called 
+	// a lookahead.
+	private char peek() {
+		if (isAtEnd()) return '\0';
+		return source.charAt(current);
 	}
 
 	private boolean isAtEnd() {
