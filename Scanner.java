@@ -153,6 +153,9 @@ class Scanner {
 				Double.parseDouble(source.substring(start, current)));
 	}
 
+	// block comments are handled by usig peek() and peekNext() to look for */ 
+	// which signifies the end of a block comment. This supports multi-line
+	// but not nested block comments (because what are the point of those?)
 	private void blockComment() {
 		while (peek() != '*' && peekNext() != '/' && !isAtEnd()) {
 			if (peek() == '\n') line++;
