@@ -17,6 +17,8 @@ import static jlox.TokenType.*;
  */
 
 class Parser {
+	private static class ParseError extends RuntimeException {}
+
 	private final List<Token> tokens;
 	private int current = 0;
 
@@ -97,6 +99,8 @@ class Parser {
 			Expr right = unary();
 			expr = new Expr.Binary(expr, operator, right);
 		}
+
+		return expr;
 	}
 
 	// rule: ( "!" | "-" ) unary
@@ -141,6 +145,12 @@ class Parser {
 		return false;
 	}
 
+	private Token consume(TokenType type, String message) {
+		if (check(type)) return advance();
+
+		throw error(peek(), message);
+	}
+
 	// returns true if the current token is of the given type.
 	// Unlike match(), it never consumes the token, only looks at it.
 	private boolean check(TokenType type) {
@@ -166,5 +176,10 @@ class Parser {
 	// returns the most recently consumed token
 	private Token previous() {
 		return tokens.get(current -1);
+	}
+
+	private ParseError error(Token token, String message) {
+		Lox.error(token, message);	
+		return new ParseError();
 	}
 }
