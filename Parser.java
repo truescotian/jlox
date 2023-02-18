@@ -122,7 +122,13 @@ class Parser {
 		return primary();
 	}
 
-	// rule: NUMBER | STRING | "true" | "false" | "nil" | "(" expression ")"
+	// rule: NUMBER | STRING | "true" | "false" | "nil" 
+	// | "(" expression ")"
+	// Error productions...
+	// | ( "!=" | "==" ) equality
+	// | ( ">" | ">=" | "<" | "<=" ) comparison
+	// | ( "+" ) term
+	// | ( "/" | "*" ) factor 
 	private Expr primary() {
 		if (match(FALSE)) return new Expr.Literal(false);
 		if (match(TRUE)) return new Expr.Literal(true);
@@ -136,6 +142,31 @@ class Parser {
 			Expr expr = expression();
 			consume(RIGHT_PAREN, "Expect ')' after expression.");
 			return new Expr.Grouping(expr);
+		}
+
+		// Error productions
+		if (match(BANG_EQUAL, EQUAL_EQUAL)) {
+			error(previous(), "Missing left-hand operand.");
+			equality();
+			return null;
+		}
+
+		if (match(GREATER, GREATER_EQUAL, LESS, LESS_EQUAL)) {
+			error(previous(), "Missing left-hand operand.");
+			comparison();
+			return null;
+		}
+
+		if (match(PLUS)) {
+			error(previous(), "Missing left-hand operand.");
+			term();
+			return null;
+		}
+
+		if (match(SLASH, STAR)) {
+			error(previous(), "Missing left-hand operand.");
+			factor();
+			return null;
 		}
 
 		throw error(peek(), "Expect expression.");
