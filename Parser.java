@@ -182,4 +182,38 @@ class Parser {
 		Lox.error(token, message);	
 		return new ParseError();
 	}
+
+	// discard tokens until it thinks it found a statement boundary. After
+	// catching a ParseError, we'll call this to get back in sync.
+	private void synchronize() {
+		// we want to discard tokens until we're right at the
+		// beginning of the next statement.
+		advance();
+
+		while (!isAtEnd()) {
+			// if true, we're probably finished with a statement.
+			// return because we're all synced up and ready to parse
+			// the next statement!
+			if (previous().type == SEMICOLON) return;
+		
+			// most statements start with one of these keywords.
+			// When the next (peek()) token is any one of those,
+			// we're about to start a statement.
+			// return because we're all synced up and ready to parse
+			// the next statement!
+			switch (peek().type) {
+				case CLASS:
+				case FUN:
+				case VAR:
+				case FOR:
+				case IF:
+				case WHILE:
+				case PRINT:
+				case RETURN:
+					return;
+			}
+
+			advance();
+		}
+	}
 }
