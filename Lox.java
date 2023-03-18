@@ -30,7 +30,7 @@ public class Lox {
 
 		// Indicate an error in the exit code.
 		if (hadError) System.exit(65);
-		if (hadRuntimeError) Syustem.exit(70);
+		if (hadRuntimeError) System.exit(70);
 	}
 
 	private static void runPrompt() throws IOException {
