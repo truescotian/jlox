@@ -29,6 +29,19 @@ class Interpreter implements Expr.Visitor<Object> {
 		return null;
 	}
 
+	private boolean isTruthy(Object object) {
+		if (object == null) return false;
+		if (object instanceof Boolean) return (boolean)object;
+		return true;
+	}
+
+	private boolean isEqual(Object a, Object b) {
+		if (a == null && b == null) return true;
+		if (a == null) return false;
+
+		return a.equals(b);
+	}
+
 	@Override
 	public Object visitGroupingExpr(Expr.Grouping expr) {
 		// recursively evaluate the grouped (inner node within parenthesis) 
@@ -77,18 +90,5 @@ class Interpreter implements Expr.Visitor<Object> {
 
 		// Unreachable
 		return null;
-	}
-
-	private boolean isTruthy(Object object) {
-		if (object == null) return false;
-		if (object instanceof Boolean) return (boolean)object;
-		return true;
-	}
-
-	private boolean isEqual(Object a, Object b) {
-		if (a == null && b == null) return true;
-		if (a == null) return false;
-
-		return a.equals(b);
 	}
 }
