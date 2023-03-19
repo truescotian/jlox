@@ -55,7 +55,7 @@ class Parser {
 	private Stmt expressionStatement() {
 		Expr value = expression();
 		consume(SEMICOLON, "Expect ';' after value.");
-		return new Stmt.Expression(expr);
+		return new Stmt.Expression(value);
 	}
 
 	// rule: comparison ( ( "!=" | "==" ) comparison )*
