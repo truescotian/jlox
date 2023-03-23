@@ -144,6 +144,7 @@ class Parser {
 
 	// rule: NUMBER | STRING | "true" | "false" | "nil" 
 	// | "(" expression ")"
+	// | IDENTIFIER;
 	// Error productions...
 	// | ( "!=" | "==" ) equality
 	// | ( ">" | ">=" | "<" | "<=" ) comparison
