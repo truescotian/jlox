@@ -63,6 +63,18 @@ class Parser {
 		return new Stmt.Print(value);
 	}
 
+	private Stmt varDeclaration() {
+		Token name = consume(IDENTIFIER, "Expect variable name.");
+
+		Expr initializer = null;
+		if (match(EQUAL)) {
+			initializer = expression();
+		}
+
+		consume(SEMICOLIN, "Exepect ';' after variable declaration");
+		return new Stmt.Var(name, initializer);
+	}
+
 	private Stmt expressionStatement() {
 		Expr value = expression();
 		consume(SEMICOLON, "Expect ';' after value.");
@@ -169,6 +181,10 @@ class Parser {
 		if (match(NUMBER, STRING)) {
 			return new Expr.Literal(previous().literal);
 		}	
+
+		if (match(IDENTIFIER)) {
+			return new Expr.Variable(previous());
+		}
 
 		if (match(LEFT_PAREN)) {
 			Expr expr = expression();
