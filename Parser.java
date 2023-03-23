@@ -30,7 +30,7 @@ class Parser {
 	List<Stmt> parse() {
 		List<Stmt> statements = new ArrayList<>();
 		while (!isAtEnd()) {
-			statements.add(statement());
+			statements.add(declaration());
 		}
 
 		return statements;
@@ -38,6 +38,17 @@ class Parser {
 
 	private Expr expression() {
 		return equality();
+	}
+
+	private Stmt declaration() {
+		try {
+			if (match(VAR)) return varDeclaration();
+
+			return statement();
+		} catch (ParseError error) {
+			synchronize();
+			return null;
+		}
 	}
 
 	private Stmt statement() {
