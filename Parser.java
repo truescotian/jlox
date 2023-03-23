@@ -71,7 +71,7 @@ class Parser {
 			initializer = expression();
 		}
 
-		consume(SEMICOLIN, "Exepect ';' after variable declaration");
+		consume(SEMICOLON, "Expect ';' after variable declaration");
 		return new Stmt.Var(name, initializer);
 	}
 
