@@ -37,7 +37,32 @@ class Parser {
 	}
 
 	private Expr expression() {
-		return equality();
+		return assignment();
+	}
+
+	// most of the code for parsing an assignment expression
+	// looks similiar to the other binary operators like +. We
+	// parse the left-hand side, which can be any expression
+	// of high precedence. If we find an =, we parse the right-hand
+	// side and then wrap it all up in an assignment expression
+	// tree node.
+	private Expr assignment() {
+		Expr expr = equality();
+
+		if (match(EQUAL)) {
+			// here you are now parsing something like `var a =`
+			Token equals = previous();
+			Expr value = assignment();
+
+			if (expr instanceof Expr.Variable) {
+				Token name = ((Expr.Variable)expr).name;
+				return new Expr.Assign(name, value);
+			}
+
+			error(equals, "Invalid assignment target.");
+		}
+
+		return expr;
 	}
 
 	private Stmt declaration() {
