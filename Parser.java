@@ -78,7 +78,7 @@ class Parser {
 
 	private Stmt statement() {
 		if (match(PRINT)) return printStatement();
-		if (match(LEFT_BRACE)) return Stmt.Block(block());
+		if (match(LEFT_BRACE)) return new Stmt.Block(block());
 
 		return expressionStatement();
 	}
@@ -108,7 +108,7 @@ class Parser {
 	}
 
 	private List<Stmt> block() {
-		List<Stmt> statments = new ArrayList<>();
+		List<Stmt> statements = new ArrayList<>();
 
 		while (!check(RIGHT_BRACE) && !isAtEnd()) {
 			statements.add(declaration());
