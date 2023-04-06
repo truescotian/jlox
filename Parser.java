@@ -47,7 +47,7 @@ class Parser {
 	// side and then wrap it all up in an assignment expression
 	// tree node.
 	private Expr assignment() {
-		Expr expr = equality();
+		Expr expr = or();
 
 		if (match(EQUAL)) {
 			// here you are now parsing something like `var a =`
@@ -60,6 +60,35 @@ class Parser {
 			}
 
 			error(equals, "Invalid assignment target.");
+		}
+
+		return expr;
+	}
+
+	// parses a series of "or" expressions.
+	// it's operands are the next higher level of precedence, the "and" expression.
+	// rule: logic_and ( "or" logic_and )* ;
+	private Expr or() {
+		Expr expr = and();
+
+		while (match(OR)) { 
+			Token operator = previous();
+			Expr right = and();
+			expr = new Expr.Logical(expr, operator, right);
+		}
+
+		return expr;
+	}
+
+	// parses a series of "and" expressions
+	// rule: equality ( "and" equality )* ;
+	private Expr and() {
+		Expr expr = equality(); 
+
+		while (match(AND)) {
+			Token operator = previous();
+			Expr right = equality();
+			expr = new Expr.Logical(expr, operator, right);
 		}
 
 		return expr;
