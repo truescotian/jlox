@@ -1,6 +1,7 @@
 package jlox;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 
 import static jlox.TokenType.*;
@@ -106,11 +107,61 @@ class Parser {
 	}
 
 	private Stmt statement() {
+		if (match(FOR)) return forStatement();
 		if (match(IF)) return ifStatement();
 		if (match(PRINT)) return printStatement();
+		if (match(WHILE)) return whileStatement();
 		if (match(LEFT_BRACE)) return new Stmt.Block(block());
 
 		return expressionStatement();
+	}
+
+	private Stmt forStatement() {
+		consume(LEFT_PAREN, "Expect '(' after 'for'.");
+
+		Stmt initializer;
+		if (match(SEMICOLON)) {
+			initializer = null;
+		} else if (match(VAR)) {
+			initializer = varDeclaration();
+		} else {
+			initializer = expressionStatement();
+		}
+
+		Expr condition = null;
+		if (!check(SEMICOLON)) {
+			condition = expression();
+		}
+		consume(SEMICOLON, "Expect ';' after loop condition.");
+
+		Expr increment = null;
+		if (!check(RIGHT_PAREN)) {
+			increment = expression();
+		}
+		consume(RIGHT_PAREN, "Expect ')' after for clauses");
+		Stmt body = statement();
+
+		// the body, if there is one, executes after the body in each iteration of the
+		// loop. We do that by replacing the body with a little block that contains the original
+		// body followed by an expression statement that evaluates the increment.
+		if (increment != null) {
+			body = new Stmt.Block(
+				Arrays.asList(body, new Stmt.Expression(increment)));
+		}
+
+		// take the condition and the body and build the loop using a primitive while loop.
+		// If the condition is omitted, we jam in true to make an infinite loop.
+		if (condition == null) condition = new Expr.Literal(true);
+		body = new Stmt.While(condition, body);
+		
+		// if there is an initializer, it runs once before the entire loop. We do that
+		// by, again, replacing the whole statement with a block that runs
+		// the initializer and then executes the loop.
+		if (initializer != null) {
+			body = new Stmt.Block(Arrays.asList(initializer, body));
+		}
+
+		return body;
 	}
 
 	private Stmt ifStatement() {
@@ -143,6 +194,15 @@ class Parser {
 
 		consume(SEMICOLON, "Expect ';' after variable declaration");
 		return new Stmt.Var(name, initializer);
+	}
+
+	private Stmt whileStatement() {
+		consume(LEFT_PAREN, "Expect '(' after 'while'.");
+		Expr condition = expression();
+		consume(RIGHT_PAREN, "Expect ')' after condition");
+		Stmt body = statement();
+
+		return new Stmt.While(condition, body);
 	}
 
 	private Stmt expressionStatement() {
