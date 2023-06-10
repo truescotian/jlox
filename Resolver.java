@@ -28,13 +28,22 @@ class Resolver implements Expr.Visitor<Void>, Stmt.Visitor<Void> {
   }
 
   @Override
+  public Void visitFunctionStmt(Stmt.Function stmt) {
+    declare(stmt.name);
+    define(stmt.name);
+
+    resolveFunction(stmt);
+    return null;
+  }
+
+  @Override
   // variable declarations write to scope maps.
   public Void visitVarStmt(Stmt.Var stmt) {
     // we need to split binding into two steps, the first is
     // declaring which will mark it as "not ready yet" by binding
     // the name to false.
     declare(stmt.name);
-    if (stmt.innitializer != null) {
+    if (stmt.initializer != null) {
       // resolve the initializer expression in this scope
       // where the new variable now exists but is unavailable.
       resolve(stmt.initializer);
@@ -77,6 +86,16 @@ class Resolver implements Expr.Visitor<Void>, Stmt.Visitor<Void> {
 
   private void resolve(Expr expr) {
     expr.accept(this);
+  }
+
+  private void resolveFunction(Stmt.Function function) {
+    beginScope();
+    for (Token param : function.params) {
+      declare(param);
+      define(param);
+    }
+    resolve(function.body);
+    endScope();
   }
 
   private void beginScope() {
