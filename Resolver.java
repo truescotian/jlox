@@ -28,6 +28,7 @@ class Resolver implements Expr.Visitor<Void>, Stmt.Visitor<Void> {
   }
 
   @Override
+  // variable declarations write to scope maps.
   public Void visitVarStmt(Stmt.Var stmt) {
     // we need to split binding into two steps, the first is
     // declaring which will mark it as "not ready yet" by binding
@@ -42,6 +43,21 @@ class Resolver implements Expr.Visitor<Void>, Stmt.Visitor<Void> {
     // ready for prime time baby. Now we define the variable
     // (it's ready)
     define(stmt.name);
+    return null;
+  }
+
+  @Override
+  // scope maps are read when resolving variable expressions.
+  public Void visitVariableExpr(Expr.Variable expr) {
+    // check to see if the variable is being accessed inside its own initializer.
+    // such as var a = (a + 1);
+    // if the variable exists in the current scope but its value is false, that means we
+    // have declared it but not yet defined it. We report that error.
+    if (!scopes.isEmpty() && scopes.peek().get(expr.name.lexeme) == Boolean.FALSE) {
+      Lox.error(expr.name, "Can't read local variable in its own initializer");
+    }
+
+    resolveLocal(expr, expr.name);
     return null;
   }
 
@@ -76,5 +92,22 @@ class Resolver implements Expr.Visitor<Void>, Stmt.Visitor<Void> {
     
     // fully initialized and available for use.
     scopes.peek().put(name.lexeme, true);
+  }
+
+  // helper to resolve a variable. If we walk through all the block scopes
+  // and never find the variable, it's left unresolved and assumed to be
+  // global.
+  private void resolveLocal(Expr expr, Token name) {
+    // Start a the innermost scope and work outwards, looking in 
+    // each map for a matching name.
+    for (int i = scopes.size() - 1; i >= 0; i--) {
+      if (scopes.get(i).containsKey(name.lexeme)) {
+        // resolve, passing in the number of scopes between the innermost scope
+        // and the scope where the variable was found.
+        // E.g., if the variable was found in the current scope, we pass in zero,
+        // if it's in the immediately enclosing scope, 1.
+        interpreter.resolve(expr, scopes.size() - 1 - i);
+      }
+    }
   }
 }
