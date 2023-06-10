@@ -27,6 +27,24 @@ class Resolver implements Expr.Visitor<Void>, Stmt.Visitor<Void> {
     return null;
   }
 
+  @Override
+  public Void visitVarStmt(Stmt.Var stmt) {
+    // we need to split binding into two steps, the first is
+    // declaring which will mark it as "not ready yet" by binding
+    // the name to false.
+    declare(stmt.name);
+    if (stmt.innitializer != null) {
+      // resolve the initializer expression in this scope
+      // where the new variable now exists but is unavailable.
+      resolve(stmt.initializer);
+    }
+
+    // ready for prime time baby. Now we define the variable
+    // (it's ready)
+    define(stmt.name);
+    return null;
+  }
+
   private void resolve(Stmt stmt) {
     stmt.accept(this);
   }
@@ -41,5 +59,20 @@ class Resolver implements Expr.Visitor<Void>, Stmt.Visitor<Void> {
 
   private void endScope() {
     scopes.pop();
+  }
+
+  private void declare(Token name) {
+    if (scopes.isEmpty()) return;
+
+    Map<String, Boolean> scope = scopes.peek();
+
+    // mark it as "not ready yet" by binding the name to false 
+    // in the scope map
+    scope.put(name.lexeme, false);
+  }
+
+  private void define(Token name) {
+    if (scopes.isEmpty()) return;
+    scopes.peek().put(name.lexeme, true);
   }
 }
