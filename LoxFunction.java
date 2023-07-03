@@ -2,6 +2,8 @@ package jlox;
 
 import java.util.List;
 
+import jlox.Environment;
+
 class LoxFunction implements LoxCallable {
   private final Stmt.Function declaration;
   private final Environment closure;
@@ -9,6 +11,12 @@ class LoxFunction implements LoxCallable {
   LoxFunction(Stmt.Function declaration, Environment closure) {
     this.closure = closure;
     this.declaration = declaration;
+  }
+
+  LoxFunction bind(LoxInstance instance) {
+    Environment environment = new Environment(closure);
+    environment.define("this", instance);
+    return new LoxFunction(declaration, environment);
   }
 
   @Override
